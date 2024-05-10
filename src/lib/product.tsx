@@ -29,6 +29,8 @@ export const ProductSchema = z.object({
     .string()
     .url({ message: "Banner is not a valid url." })
     .max(250, { message: "Banner url cannot exceed 250 letters." }),
+  createdAt: z.number(),
+  launchedAt: z.number().or(z.undefined()),
 });
 
 type Product = z.infer<typeof ProductSchema>;

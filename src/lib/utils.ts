@@ -45,3 +45,10 @@ export function getNextSundayDate() {
     new Date().getTime() + (7 - new Date().getDay()) * 24 * 60 * 60 * 1000
   ).getDate()}`;
 }
+
+export function getFormattedDate() {
+  return new Date().toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+  });
+}

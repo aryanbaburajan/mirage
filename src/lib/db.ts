@@ -2,6 +2,7 @@ import "server-only";
 
 import Product from "@/lib/product";
 import { MongoClient, PushOperator, ServerApiVersion } from "mongodb";
+import Subscriber from "./subscriber";
 
 if (!process.env.MONGODB_URI) {
   throw new Error(
@@ -43,13 +44,13 @@ export async function ping() {
   console.log(" ping: MongoDB is connected.");
 }
 
-export async function addReader(email: string, tags: string[]) {
+export async function addReader(email: string, topics: string[]) {
   const client = await clientPromise;
 
   const database = client.db("subscriberListDB");
   const collection = database.collection("subscribers");
 
-  const subscriberObject = { email: email, tags: tags };
+  const subscriberObject = { email: email, topics: topics };
   await collection.insertOne(subscriberObject);
 
   console.log(` addReader: Email ${email} subscribed to mailing list.`);
@@ -232,4 +233,23 @@ export async function isUserProductOwner(userId: string, productId: number) {
     console.log(` isUserProductOwner: User ${userId} does not exist.`);
     return false;
   }
+}
+
+export async function getUserProductsAndSubscribers() {
+  const client = await clientPromise;
+
+  const productListDB = client.db("productListDB");
+  const subscriberListDB = client.db("subscriberListDB");
+  const productCollection = productListDB.collection("user_products");
+  const subscriberCollection = subscriberListDB.collection("subscribers");
+  const subscribers: Subscriber[] = (
+    await subscriberCollection.find().toArray()
+  ).map((doc) => {
+    return { email: doc.email, topics: doc.topics, createdAt: doc.createdAt };
+  });
+  const products: Product[] = (
+    await productCollection.find({ "products.status": "scheduled" }).toArray()
+  ).flatMap((doc) => doc.products);
+
+  return { subscribers, products };
 }
